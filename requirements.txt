@@ -1,4 +1,3 @@
-os
 numpy
 tensorflow
 matplotlib
