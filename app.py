@@ -24,34 +24,53 @@ def predict_image(image):
     return predicted_label, confidence
 
 # Streamlit app
-st.title("Real-Time Emotion Detection")
+st.set_page_config(page_title="Emotion Detection", page_icon="😃", layout="centered")
 
-st.write("Turn on your camera to detect emotions in real time.")
+st.markdown(
+    """
+    <style>
+        .main {
+            background-color: #f0f2f6;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        .subtitle {
+            font-size: 18px;
+            color: #555;
+            text-align: center;
+        }
+    </style>
+    <div class="main">
+        <p class="title">Emotion Detection from Image</p>
+        <p class="subtitle">Upload an image to detect emotions.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-# Add a button to start the camera
-if st.button("Start Camera"):
-    # Initialize webcam
-    cap = cv2.VideoCapture(0)
+# File uploader
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-    # Stream video
-    frame_window = st.image([])
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            st.error("Failed to capture image. Make sure your camera is connected.")
-            break
-
-        # Convert BGR to RGB
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # Predict emotion
-        predicted_label, confidence = predict_image(rgb_frame)
-
-        # Overlay the predicted label on the frame
-        cv2.putText(frame, f"{predicted_label} ({confidence:.2f})", (10, 40),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-        # Update the video frame in Streamlit
-        frame_window.image(frame, channels="BGR")
-
-    cap.release()
+if uploaded_file is not None:
+    # Open the image
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
+    
+    # Convert image to numpy array
+    image = np.array(image)
+    if image.shape[-1] == 4:
+        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)  # Convert RGBA to RGB
+    
+    # Predict emotion
+    predicted_label, confidence = predict_image(image)
+    
+    # Display results
+    st.markdown(f"<h3 style='text-align: center; color: #444;'>Predicted Emotion: {predicted_label}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align: center; color: #777;'>Confidence: {confidence:.2f}</h4>", unsafe_allow_html=True)
